@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 영화 티어리스트</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: #e9ecef;
+            --primary-color: #4c6ef5;
+            --primary-hover: #3b5bdb;
+
+            /* Tier Colors */
+            --s-tier-bg: #ff6b6b;
+            --a-tier-bg: #fcc419;
+            --b-tier-bg: #51cf66;
+            --c-tier-bg: #339af0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+
+        /* Input Form */
+        .add-movie-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+        }
+
+        .add-movie-form input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .add-movie-form input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .add-movie-form button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-movie-form button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Tier Board */
+        .tier-board {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .tier-row {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 10px;
+            min-height: 90px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .tier-label {
+            width: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .tier-s .tier-label { background-color: var(--s-tier-bg); }
+        .tier-a .tier-label { background-color: var(--a-tier-bg); }
+        .tier-b .tier-label { background-color: var(--b-tier-bg); }
+        .tier-c .tier-label { background-color: var(--c-tier-bg); }
+
+        .tier-dropzone {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+        }
+
+        .tier-dropzone.drag-over {
+            background-color: #f1f3f5;
+        }
+
+        /* Unranked Area */
+        .unranked-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            margin-bottom: 20px;
+        }
+
+        .unranked-container h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #495057;
+        }
+
+        .unranked-dropzone {
+            min-height: 100px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #dee2e6;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .unranked-dropzone.drag-over {
+            background-color: #e9ecef;
+            border-color: var(--primary-color);
+        }
+
+        /* Trashcan Area */
+        .trash-dropzone {
+            background-color: #fff5f5;
+            border: 2px dashed #ffa8a8;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: #e03131;
+            font-weight: 600;
+            transition: background-color 0.2s, border-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 70px;
+            cursor: default;
+        }
+
+        .trash-dropzone.drag-over {
+            background-color: #ffe3e3;
+            border-color: #f03e3e;
+            transform: scale(1.01);
+        }
+
+        /* Movie Item Card */
+        .movie-item {
+            background-color: #ffffff;
+            border: 1px solid #ced4da;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .movie-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .movie-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 나만의 영화 티어리스트</h1>
+            <p>본 영화의 평가를 드래그 앤 드롭으로 정리해보세요.</p>
+        </header>
+
+        <!-- Movie Input Form -->
+        <form id="movieForm" class="add-movie-form">
+            <input type="text" id="movieTitle" placeholder="영화 제목을 입력하세요..." required autocomplete="off">
+            <button type="submit" aria-label="영화 추가">+</button>
+        </form>
+
+        <!-- Tier Board -->
+        <div class="tier-board">
+            <div class="tier-row tier-s">
+                <div class="tier-label">S</div>
+                <div class="tier-dropzone" data-tier="S"></div>
+            </div>
+            <div class="tier-row tier-a">
+                <div class="tier-label">A</div>
+                <div class="tier-dropzone" data-tier="A"></div>
+            </div>
+            <div class="tier-row tier-b">
+                <div class="tier-label">B</div>
+                <div class="tier-dropzone" data-tier="B"></div>
+            </div>
+            <div class="tier-row tier-c">
+                <div class="tier-label">C</div>
+                <div class="tier-dropzone" data-tier="C"></div>
+            </div>
+        </div>
+
+        <!-- Unranked Section -->
+        <div class="unranked-container">
+            <h2>📌 평가 대기 목록 (아직 보지 않았거나 평가 전인 영화)</h2>
+            <div class="tier-dropzone unranked-dropzone" data-tier="unranked"></div>
+        </div>
+
+        <!-- Trashcan Section -->
+        <div class="trash-dropzone" id="trashzone" data-tier="trash">
+            🗑️ 이곳에 영화를 드래그하여 놓으면 삭제됩니다
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'my_movie_tierlist_data';
+        
+        let state = {
+            movies: []
+        };
+
+        const movieForm = document.getElementById('movieForm');
+        const movieTitleInput = document.getElementById('movieTitle');
+        const dropzones = document.querySelectorAll('.tier-dropzone, #trashzone');
+
+        let draggedMovieId = null;
+
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to parse local storage data', e);
+                    state = { movies: [] };
+                }
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function render() {
+            // 티어 구역 및 대기 구역 초기화
+            document.querySelectorAll('.tier-dropzone').forEach(zone => {
+                zone.innerHTML = '';
+            });
+
+            // 영화 카드 렌더링
+            state.movies.forEach(movie => {
+                const card = createMovieCard(movie);
+                const targetZone = document.querySelector(`.tier-dropzone[data-tier="${movie.tier}"]`);
+                if (targetZone) {
+                    targetZone.appendChild(card);
+                }
+            });
+        }
+
+        function createMovieCard(movie) {
+            const el = document.createElement('div');
+            el.className = 'movie-item';
+            el.textContent = movie.title;
+            el.setAttribute('draggable', 'true');
+            el.setAttribute('data-id', movie.id);
+
+            el.addEventListener('dragstart', (e) => {
+                draggedMovieId = movie.id;
+                el.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', movie.id);
+            });
+
+            el.addEventListener('dragend', () => {
+                draggedMovieId = null;
+                el.classList.remove('dragging');
+            });
+
+            return el;
+        }
+
+        function setupDropzones() {
+            dropzones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('drag-over');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('drag-over');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+
+                    const id = e.dataTransfer.getData('text/plain') || draggedMovieId;
+                    const targetTier = zone.getAttribute('data-tier');
+
+                    if (id && targetTier) {
+                        if (targetTier === 'trash') {
+                            deleteMovie(id);
+                        } else {
+                            updateMovieTier(id, targetTier);
+                        }
+                    }
+                });
+            });
+        }
+
+        function addMovie(title) {
+            const newMovie = {
+                id: Date.now().toString(),
+                title: title.trim(),
+                tier: 'unranked'
+            };
+            state.movies.push(newMovie);
+            saveData();
+            render();
+        }
+
+        function updateMovieTier(id, newTier) {
+            const movie = state.movies.find(m => m.id === id);
+            if (movie && movie.tier !== newTier) {
+                movie.tier = newTier;
+                saveData();
+                render();
+            }
+        }
+
+        function deleteMovie(id) {
+            state.movies = state.movies.filter(m => m.id !== id);
+            saveData();
+            render();
+        }
+
+        movieForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = movieTitleInput.value.trim();
+            if (title) {
+                addMovie(title);
+                movieTitleInput.value = '';
+                movieTitleInput.focus();
+            }
+        });
+
+        function init() {
+            loadData();
+            setupDropzones();
+            render();
+        }
+
+        init();
+    </script>
+</body>
+</html>
